@@ -45,6 +45,14 @@
 #     name: root
 #     password: "{{ root_password | password_hash('sha512') }}"
 # ...
+---
+- name: Cập nhật pip lên phiên bản mới nhất
+  shell: python3 -m pip install pip --upgrade
+
+- name: Cài đặt pyopenssl lên phiên bản mới nhất
+  pip:
+    name: pyopenssl
+    state: latest
 
 - name: Create alias for server
   lineinfile:
