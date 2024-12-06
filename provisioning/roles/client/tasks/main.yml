@@ -31,6 +31,24 @@
     owner: root
     mode: 0700
 
+
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+
+- name: Install dependencies for Docker Compose
+  apt:
+    name:
+      - python3-pip
+      - curl
+    state: present
+
+- name: Install Docker Compose using pip
+  pip:
+    name: docker-compose
+
 - name: Clone repository from Git
   git:
     repo: 'https://github.com/hinhlx/cr_commain_injection.git'
@@ -41,6 +59,7 @@
   shell: docker-compose up --build
   args:
     chdir: /home/user/project
+
 
 - name: Set root password
   user:
