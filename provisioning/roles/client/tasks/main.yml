@@ -47,62 +47,61 @@
 # ...
 
 ---
-- name: Create alias for server
-  lineinfile:
-    path: '/etc/hosts'
-    line: '192.168.20.5 server'
+- name: Cập nhật hệ thống và cài đặt các gói cần thiết
+  hosts: all
+  become: true
+  tasks:
 
-- name: Install packages
-  apt:
-    pkg:
-      - vim
-    update_cache: yes
+    - name: Cập nhật danh sách các gói
+      apt:
+        update_cache: yes
 
-- name: Install Docker
-  apt:
-    name: docker.io
-    state: present
-    update_cache: yes
+    - name: Nâng cấp tất cả các gói phần mềm hiện tại
+      apt:
+        upgrade: yes
+        force: yes
 
-- name: Install dependencies for Docker Compose
-  apt:
-    name:
-      - python3-pip
-      - curl
-    state: present
+    - name: Cài đặt các gói cần thiết
+      apt:
+        pkg:
+          - vim
+          - curl
+          - python3-pip
+          - libssl-dev
+        state: present
 
-- name: Install Docker Compose using pip
-  pip:
-    name: docker-compose
-    state: latest
+    - name: Cài đặt Docker
+      apt:
+        name: docker.io
+        state: present
 
-- name: Install OpenSSL dependencies
-  apt:
-    name:
-      - libssl-dev
-    state: present
-    update_cache: yes
+    - name: Cài đặt Docker Compose qua pip
+      pip:
+        name: docker-compose
+        state: latest
 
-- name: Ensure the correct version of urllib3 and chardet is installed
-  pip:
-    name:
-      - urllib3==1.26.7
-      - chardet==3.0.4
-    state: present
+    - name: Cài đặt các thư viện Python cần thiết
+      pip:
+        name:
+          - urllib3==1.26.7
+          - chardet==3.0.4
+          - requests==2.28.0  # Đảm bảo phiên bản tương thích với urllib3 và chardet
+        state: present
+        extra_args: --upgrade
 
-- name: Clone repository from Git
-  git:
-    repo: 'https://github.com/hinhlx/cr_commain_injection.git'
-    dest: /home/user/project
-    version: main
+    - name: Clone repository từ Git
+      git:
+        repo: 'https://github.com/hinhlx/cr_commain_injection.git'
+        dest: /home/user/project
+        version: main
 
-- name: Build and run Docker Compose
-  shell: docker-compose up --build
-  args:
-    chdir: /home/user/project
+    - name: Build và chạy Docker Compose
+      shell: docker-compose up --build
+      args:
+        chdir: /home/user/project
 
-- name: Set root password
-  user:
-    name: root
-    password: "{{ root_password | password_hash('sha512') }}"
+    - name: Thiết lập mật khẩu cho root
+      user:
+        name: root
+        password: "{{ root_password | password_hash('sha512') }}"
 ...
