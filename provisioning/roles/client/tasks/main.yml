@@ -1,0 +1,124 @@
+---
+
+- name: Create alias for server
+  lineinfile:
+    path: '/etc/hosts'
+    line: '192.168.20.5 server'
+
+- name: Install packages
+  apt:
+    pkg:
+     - nmap
+     - hydra
+     - vim
+    update_cache: yes
+
+- name: Add passwords file to the home directory
+  copy:
+    src: passlist.txt
+    dest: /home/user/passlist.txt
+    owner: user
+    mode: 0644
+- name: Add passwords file to the home directory
+  copy:
+    src: username.txt
+    dest: /home/user/username.txt
+    owner: user
+    mode: 0644
+
+- name: Add flag file to the home directory
+  copy:
+    src: flag.txt
+    dest: /home/user/flag.txt
+    owner: root
+    mode: 0700
+
+# Create user hinhlx
+- name: Create user hinhlx
+  user:
+    name: hinhlx
+    comment: "User for testing purposes"
+    shell: /bin/bash
+    home: /home/hinhlx
+    create_home: yes
+# setuid_vuln
+- name: Create Setuid Script Program
+  copy:
+    dest: /usr/local/bin/rootscript.sh
+    content: |
+      #!/bin/bash
+      echo "Running a scheduled task..." > /var/log/rootscript.log
+      if [ "$EUID" -ne 0 ]
+      then
+        echo "Not running as root" >> /var/log/rootscript.log
+      else
+        /bin/bash
+      fi
+    owner: root
+    group: root
+    mode: '0775'
+
+- name: Set Setuid Bit
+  file:
+    path: /usr/local/bin/rootscript.sh
+    mode: '04757'
+
+- name: Ensure PasswordAuthentication is set to yes
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication yes'
+    state: present
+
+#sudoers_vuln
+- name: Backup sudoers file
+  copy:
+    src: /etc/sudoers
+    dest: /etc/sudoers.bak
+    remote_src: yes
+
+- name: Update sudoers file
+  lineinfile:
+    path: /etc/sudoers
+    line: 'hinhlx ALL=(ALL) NOPASSWD: /usr/bin/vim'
+    validate: '/usr/sbin/visudo -cf %s'
+
+
+
+- name: Ensure /home/user directory exists
+  file:
+    path: /home/user
+    state: directory
+    owner: user
+    group: user
+    mode: '0755'
+#cron_vuln
+- name: Create insecure script
+  copy:
+    dest: /etc/insecure_script.sh
+    content: |
+      #!/bin/bash
+      echo "Running insecure script"
+    owner: root
+    group: root
+    mode: '0777'
+
+- name: Ensure the cron job file is owned by root
+  file:
+    path: etc/insecure_script.sh
+    owner: root
+    group: root
+
+- name: Create insecure cron job
+  cron:
+    name: "Insecure Cron Job"
+    minute: "*/5"
+    job: "/etc/insecure_script.sh"
+    state: present
+
+- name: Set root password
+  user:
+    name: root
+    password: "{{ root_password | password_hash('sha512') }}"
+...
+
