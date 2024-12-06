@@ -1,5 +1,52 @@
----
+# ---
 
+# - name: Create alias for server
+#   lineinfile:
+#     path: '/etc/hosts'
+#     line: '192.168.20.5 server'
+
+# - name: Install packages
+#   apt:
+#     pkg:
+#      - vim
+#     update_cache: yes
+
+# - name: Install Docker
+#   apt:
+#     name: docker.io
+#     state: present
+#     update_cache: yes
+
+# - name: Install dependencies for Docker Compose
+#   apt:
+#     name:
+#       - python3-pip
+#       - curl
+#     state: present
+
+# - name: Install Docker Compose using pip
+#   pip:
+#     name: docker-compose
+
+# - name: Clone repository from Git
+#   git:
+#     repo: 'https://github.com/hinhlx/cr_commain_injection.git'
+#     dest: /home/user/project
+#     version: main
+
+# - name: Build and run Docker Compose
+#   shell: docker-compose up --build
+#   args:
+#     chdir: /home/user/project
+
+
+# - name: Set root password
+#   user:
+#     name: root
+#     password: "{{ root_password | password_hash('sha512') }}"
+# ...
+
+---
 - name: Create alias for server
   lineinfile:
     path: '/etc/hosts'
@@ -8,29 +55,8 @@
 - name: Install packages
   apt:
     pkg:
-     - vim
+      - vim
     update_cache: yes
-
-- name: Add passwords file to the home directory
-  copy:
-    src: passlist.txt
-    dest: /home/user/passlist.txt
-    owner: user
-    mode: 0644
-- name: Add passwords file to the home directory
-  copy:
-    src: username.txt
-    dest: /home/user/username.txt
-    owner: user
-    mode: 0644
-
-- name: Add flag file to the home directory
-  copy:
-    src: flag.txt
-    dest: /home/user/flag.txt
-    owner: root
-    mode: 0700
-
 
 - name: Install Docker
   apt:
@@ -48,6 +74,21 @@
 - name: Install Docker Compose using pip
   pip:
     name: docker-compose
+    state: latest
+
+- name: Install OpenSSL dependencies
+  apt:
+    name:
+      - libssl-dev
+    state: present
+    update_cache: yes
+
+- name: Ensure the correct version of urllib3 and chardet is installed
+  pip:
+    name:
+      - urllib3==1.26.7
+      - chardet==3.0.4
+    state: present
 
 - name: Clone repository from Git
   git:
@@ -60,10 +101,8 @@
   args:
     chdir: /home/user/project
 
-
 - name: Set root password
   user:
     name: root
     password: "{{ root_password | password_hash('sha512') }}"
 ...
-
