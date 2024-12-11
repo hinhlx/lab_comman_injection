@@ -46,69 +46,61 @@
 #     password: "{{ root_password | password_hash('sha512') }}"
 # ...
 ---
-- name: Cập nhật pip lên phiên bản mới nhất
-  shell: python3 -m pip install pip --upgrade
-
-- name: Cài đặt pyopenssl lên phiên bản mới nhất
-  pip:
-    name: pyopenssl
-    state: latest
-
-- name: Create alias for server
-  lineinfile:
-    path: '/etc/hosts'
-    line: '192.168.20.5 server'
-    
-- name: Cập nhật danh sách các gói
+  - name: Cập nhật danh sách các gói
   apt:
-    update_cache: yes
+	update_cache: yes
 
-- name: Nâng cấp tất cả các gói phần mềm hiện tại
+- name: Cài đặt Apache và PHP
   apt:
-    upgrade: yes
-    force: yes
+	name:
+	  - apache2
+	  - php
+	  - libapache2-mod-php
+	  - php-mysql
+	state: present
 
-- name: Cài đặt các gói cần thiết
-  apt:
-    pkg:
-      - vim
-      - curl
-      - python3-pip
-      - libssl-dev
-    state: present
+- name: Tạo thư mục cho ứng dụng web
+  file:
+	path: /var/www/html/commandInjection
+	state: directory
+	mode: '0755'
 
-- name: Cài đặt Docker
-  apt:
-    name: docker.io
-    state: present
-
-- name: Cài đặt Docker Compose qua pip
-  pip:
-    name: docker-compose
-    state: latest
-
-- name: Cài đặt các thư viện Python cần thiết
-  pip:
-    name:
-      - urllib3==1.26.7
-      - chardet==3.0.4
-      - requests==2.28.0  # Đảm bảo phiên bản tương thích với urllib3 và chardet
-    state: present
-    extra_args: --upgrade
-
-- name: Clone repository từ Git
+- name: Clone mã nguồn từ GitHub
   git:
-    repo: 'https://github.com/hinhlx/cr_commain_injection.git'
-    dest: /home/user/project
-    version: main
+	repo: 'https://github.com/username/commandInjection.git' 
+	dest: /var/www/html/commandInjection
+	version: main  # Nhánh bạn muốn triển khai
+	update: yes
 
-- name: Build và chạy Docker Compose
-  shell: docker-compose up --build
-  args:
-    chdir: /home/user/project
+- name: Thiết lập quyền truy cập
+  file:
+	path: /var/www/html/commandInjection/
+	state: directory
+	owner: www-data
+	group: www-data
+	mode: '0755'
 
-- name: Thiết lập mật khẩu cho root
-  user:
-    name: root
-    password: "{{ root_password | password_hash('sha512') }}"
+- name: Cấu hình Apache để phục vụ ứng dụng
+  copy:
+	dest: /etc/apache2/sites-available/commandInjection.conf
+	content: |
+	  <VirtualHost *:80>
+		  DocumentRoot /var/www/html/commandInjection
+		  <Directory /var/www/html/commandInjection>
+			  AllowOverride All
+			  Require all granted
+		  </Directory>
+	  </VirtualHost>
+
+- name: Kích hoạt cấu hình trang web
+  shell: |
+	a2ensite commandInjection.conf
+	a2dissite 000-default.conf
+	systemctl reload apache2
+
+- name: Đảm bảo dịch vụ Apache đang chạy
+  service:
+	name: apache2
+	state: started
+	enabled: yes
 ...
