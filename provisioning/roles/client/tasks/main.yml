@@ -67,9 +67,9 @@
 
 - name: Clone mã nguồn từ GitHub
   git:
-	repo: 'https://github.com/username/commandInjection.git' 
+	repo: 'https://github.com/hinhlx/commandInjection.git' 
 	dest: /var/www/html/commandInjection
-	version: main  # Nhánh bạn muốn triển khai
+	version: main
 	update: yes
 
 - name: Thiết lập quyền truy cập
