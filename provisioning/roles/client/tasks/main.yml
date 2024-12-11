@@ -48,59 +48,59 @@
 ---
 - name: Cập nhật danh sách các gói
   apt:
-  update_cache: yes
+    update_cache: yes
 
 - name: Cài đặt Apache và PHP
   apt:
-	name:
-	  - apache2
-	  - php
-	  - libapache2-mod-php
-	  - php-mysql
-	state: present
+    name:
+      - apache2
+      - php
+      - libapache2-mod-php
+      - php-mysql
+    state: present
 
 - name: Tạo thư mục cho ứng dụng web
   file:
-	path: /var/www/html/commandInjection
-	state: directory
-	mode: '0755'
+    path: /var/www/html/commandInjection
+    state: directory
+    mode: '0755'
 
 - name: Clone mã nguồn từ GitHub
   git:
-	repo: 'https://github.com/hinhlx/commandInjection.git' 
-	dest: /var/www/html/commandInjection
-	version: main
-	update: yes
+    repo: 'https://github.com/hinhlx/commandInjection.git'
+    dest: /var/www/html/commandInjection
+    version: main
+    update: yes
 
 - name: Thiết lập quyền truy cập
   file:
-	path: /var/www/html/commandInjection/
-	state: directory
-	owner: www-data
-	group: www-data
-	mode: '0755'
+    path: /var/www/html/commandInjection/
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
 
 - name: Cấu hình Apache để phục vụ ứng dụng
   copy:
-	dest: /etc/apache2/sites-available/commandInjection.conf
-	content: |
-	  <VirtualHost *:80>
-		  DocumentRoot /var/www/html/commandInjection
-		  <Directory /var/www/html/commandInjection>
-			  AllowOverride All
-			  Require all granted
-		  </Directory>
-	  </VirtualHost>
+    dest: /etc/apache2/sites-available/commandInjection.conf
+    content: |
+      <VirtualHost *:80>
+          DocumentRoot /var/www/html/commandInjection
+          <Directory /var/www/html/commandInjection>
+              AllowOverride All
+              Require all granted
+          </Directory>
+      </VirtualHost>
 
 - name: Kích hoạt cấu hình trang web
   shell: |
-	a2ensite commandInjection.conf
-	a2dissite 000-default.conf
-	systemctl reload apache2
+    a2ensite commandInjection.conf
+    a2dissite 000-default.conf
+    systemctl reload apache2
 
 - name: Đảm bảo dịch vụ Apache đang chạy
   service:
-	name: apache2
-	state: started
-	enabled: yes
+    name: apache2
+    state: started
+    enabled: yes
 ...
