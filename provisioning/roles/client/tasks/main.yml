@@ -46,9 +46,9 @@
 #     password: "{{ root_password | password_hash('sha512') }}"
 # ...
 ---
-  - name: Cập nhật danh sách các gói
+- name: Cập nhật danh sách các gói
   apt:
-	update_cache: yes
+  update_cache: yes
 
 - name: Cài đặt Apache và PHP
   apt:
